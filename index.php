@@ -1,6 +1,8 @@
 <?php
 // INSERT INTO `tnexa` (`sno`, `title`, `description`, `tstamp`) VALUES (NULL, 'Eat food', 'Roshan please eat the food that I\'ve left you on the fridge.', current_timestamp());
 $insert = false;
+$update = false;
+$delete = false;
 // Connnect to the Database
 $servername = "localhost";
 $username = "root";
@@ -13,6 +15,12 @@ $conn = mysqli_connect($servername, $username, $password, $database);
 if(!$conn){
   die("Sorry we failed to connect: " . mysqli_connect_error());
 }
+if(isset($_GET['delete'])){
+  $sno = $_GET['delete'];
+  $delete = true;
+  $sql = "DELETE FROM `tnexa` WHERE `sno` = $sno";
+  $result = mysqli_query($conn, $sql);
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
   if(isset($_POST['snoEdit'])){
   // Update the recored
@@ -22,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
   $sql = "UPDATE `tnexa` SET `title` = '$title' , `description` = '$description' WHERE `tnexa`.`sno` = $sno;";
   $result = mysqli_query($conn, $sql);
   if($result){
-    echo "We updated the record";
+    $update = true;
   }
   else{
     echo "We could not update the record.";
@@ -68,8 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         <h1 class="modal-title fs-5" id="editModalLabel">Edit this note</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <form action ="/crud/index.php" method="post">
       <div class="modal-body">
-        <form action ="/crud/index.php" method="post">
           <input type="hidden" name="snoEdit" id="snoEdit">
           <div class="mb-3">
             <label for="title" class="form-label">Note Title</label>
@@ -80,19 +88,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
               <textarea class="form-control" placeholder="Leave a description" id="descriptionEdit" name="descriptionEdit" rows="3"></textarea>
             </div>
             <div class="mb-3"></div>
-            <button type="submit" class="btn btn-primary">Add Note</button>
-        </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer d-block mr-auto">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
       </div>
+      </form>
     </div>
   </div>
 </div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-          <a class="navbar-brand" href="#">Nexa</a>
+          <a class="navbar-brand" href="#"><img src="/crud/images/nexa.png" alt="Nexa" style="height: 40px;"></a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -122,9 +129,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
     </div>";
       }
+      if($delete){
+        echo"<div class='alert alert-warning alert-dismissible fade show' role='alert'>
+        <strong>SUCCESS!</strong> Your note has been deleted successfully.
+        <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+    </div>";
+      }
+      if($update){
+        echo"<div class='alert alert-warning alert-dismissible fade show' role='alert'>
+        <strong>SUCCESS!</strong> Your note has been updated successfully.
+        <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+    </div>";
+      }
       ?>
       <div class="container my-4">
-        <h2>Add a note</h2>
+        <h2>Add a note to Nexa App</h2>
         <form action ="/crud/index.php" method="post">
             <div class="mb-3">
               <label for="title" class="form-label">Note Title</label>
@@ -135,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                 <textarea class="form-control" placeholder="Leave a description" id="description" name="description" rows="3"></textarea>
               </div>
               <div class="mb-3"></div>
-              <button type="submit" class="btn btn-primary">Update Note</button>
+              <button type="submit" class="btn btn-primary">Add Note</button>
           </form>
       </div>
       <div class="container my-4">
@@ -159,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
       <th scope='row'>". $sno . "</th>
       <td>". $row['title'] . "</td>
       <td>". $row['description'] . "</td>
-      <td> <button class='btn btn-sm btn-primary edit' id=".$row['sno'].">Edit</button> <a href='/del'>Delete</a></td>
+      <td> <button class='btn btn-sm btn-primary edit' id=".$row['sno'].">Edit</button> <button class='btn btn-sm btn-primary delete' id=d".$row['sno'].">Delete</button>
     </tr>";
         }
         ?>
@@ -183,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     Array.from(edits).forEach((element) => {
       // Add an event listener for the 'click' event
       element.addEventListener("click", (e) => {
-        console.log("edit",);
+        console.log("edit", );
         tr =  e.target.parentNode.parentNode;
         title = tr.getElementsByTagName('td')[0].innerText;
         description = tr.getElementsByTagName('td')[1].innerText;
@@ -195,6 +214,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $('#editModal').modal('toggle');
       })
     });
+
+    // Select all elements with the class 'delete'
+    const deletes = document.getElementsByClassName('delete');
+  
+    // Convert the HTMLCollection to an array and loop through each element
+    Array.from(deletes).forEach((element) => {
+      // Add an event listener for the 'click' event
+      element.addEventListener("click", (e) => {
+        console.log("delete", );
+        sno = e.target.id.substr(1,);
+
+        if(confirm("Are you sure you want to delete this note?")){
+          console.log("yes")
+          window.location = `/crud/index.php?delete=${sno}`;
+        }
+        else{
+          console.log("no");
+        }
+      })
+    });
+    
   </script>
   
   </body>
